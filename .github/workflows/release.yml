@@ -39,6 +39,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
       - name: Verificar regresiones
         shell: pwsh
         run: |
@@ -47,6 +50,7 @@ jobs:
           cargo test --manifest-path src-tauri/Cargo.toml --locked --all-targets
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Compilar y preparar release firmada
+        id: release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -57,6 +61,34 @@ jobs:
           releaseName: ParitySQL ${{ github.ref_name }}
           releaseDraft: true
           prerelease: false
+          releaseBody: |
+            Instalador de ParitySQL para Windows x64 con actualizaciones automáticas.
+            Descarga y ejecuta el archivo setup.exe. Las versiones posteriores se ofrecen desde la aplicación.
+          generateReleaseNotes: true
           args: --locked --config src-tauri/tauri.release.local.json
           includeUpdaterJson: true
           updaterJsonPreferNsis: true
+      - name: Publicar la release terminada
+        uses: actions/github-script@v7
+        env:
+          RELEASE_ID: ${{ steps.release.outputs.releaseId }}
+        with:
+          script: |
+            const release_id = Number(process.env.RELEASE_ID);
+            if (!Number.isInteger(release_id) || release_id <= 0) throw new Error('No se obtuvo la release compilada.');
+            const { data: assets } = await github.rest.repos.listReleaseAssets({ ...context.repo, release_id });
+            for (const suffix of ['setup.exe', 'setup.exe.sig', 'latest.json']) {
+              if (!assets.some(asset => asset.name.endsWith(suffix) && asset.size > 0)) {
+                throw new Error('Falta el artefacto firmado: ' + suffix);
+              }
+            }
+            await github.rest.repos.updateRelease({ ...context.repo, release_id, draft: false, make_latest: 'true' });
+      - name: Verificar descarga y firma del canal público
+        shell: pwsh
+        run: |
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            cargo test --manifest-path src-tauri/Cargo.toml --locked --lib published_update -- --ignored --nocapture
+            if ($LASTEXITCODE -eq 0) { exit 0 }
+            if ($attempt -lt 3) { Start-Sleep -Seconds 10 }
+          }
+          exit 1

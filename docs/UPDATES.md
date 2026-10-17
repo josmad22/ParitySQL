@@ -1,86 +1,76 @@
 # Actualizaciones de ParitySQL
 
-## Estado inicial
+## Uso
 
-La función está implementada y **desactivada mientras no se configure una fuente**.
-En `src-tauri/tauri.conf.json`, `plugins.updater.pubkey` queda vacío y `endpoints`
-es una lista vacía. No se genera ninguna clave privada al instalar o abrir la app.
-El desarrollo y las compilaciones normales funcionan sin repositorio ni claves.
+La aplicación consulta automáticamente las [releases públicas de GitHub](https://github.com/josmad22/ParitySQL/releases) al abrirse y cada seis horas. Solo muestra el aviso si hay una versión superior.
 
-## Comportamiento
+1. Pulsa **Nueva versión disponible** para descargarla. Puedes seguir trabajando mientras termina.
+2. La descarga se verifica con la clave pública incluida en la aplicación.
+3. Cuando aparezca **Reiniciar ahora**, guarda o exporta tus scripts y pulsa el botón. El instalador actualiza la aplicación y la vuelve a abrir.
 
-- Se comprueba al iniciar, cada seis horas y al recuperar conexión/enfoque cuando
-  corresponde. Sin una versión superior no aparece ningún botón.
-- Una versión disponible muestra un botón pequeño en la esquina inferior derecha.
-  Su animación respeta la preferencia del sistema de reducir movimiento.
-- Al pulsarlo se descarga el paquete por HTTPS y se verifica su firma mediante el
-  plugin oficial de Tauri. Hasta completar esa verificación no se ofrece reiniciar.
-- **Reiniciar ahora** instala el paquete y vuelve a abrir ParitySQL. En Windows el
-  instalador cierra el proceso: por eso descargar e instalar son pasos separados.
-- Un fallo de descarga o instalación permite reintentar. Los fallos de comprobación
-  automática no interrumpen el trabajo con avisos de error.
-- El paquete preparado queda en memoria. Si se cierra por completo la aplicación
-  sin instalar, se descargará de nuevo cuando se solicite. Recargar solo la interfaz
-  recupera el estado de la operación que permanece en Rust.
-- El reinicio espera los guardados de conexiones y no se inicia durante una consulta,
-  importación o edición de conexiones. Los scripts de trabajo siguen en memoria:
-  deben copiarse/exportarse antes de reiniciar.
+Ambos pasos son voluntarios. Los errores permiten reintentar; las conexiones guardadas se conservan. El aviso permanece oculto si no hay novedades o no se puede comprobar la versión.
 
-## Cuando exista el repositorio público
+## Primera instalación
 
-1. Genera una pareja de claves con `cargo tauri signer generate --write-keys RUTA`
-   en un directorio privado **fuera del repositorio**. Conserva una copia segura de
-   la clave privada; las versiones instaladas confían en su pareja pública.
-2. En GitHub, crea la variable de Actions `PARITYSQL_UPDATER_PUBLIC_KEY` con el contenido
-   del archivo `.pub`. El script de publicación rechaza el formato de una clave privada.
-3. Crea el secreto de Actions `TAURI_SIGNING_PRIVATE_KEY` con la clave privada, y
-   `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` si le asignaste contraseña. Ninguna de estas
-   claves privadas se guarda en los archivos del proyecto.
-4. Mantén iguales las versiones de `src-tauri/Cargo.toml` y `tauri.conf.json`.
-   Crea una etiqueta `v` seguida de esa versión, por ejemplo `v0.1.0`.
-5. El workflow `release.yml` verifica las pruebas, prepara la configuración pública
-   a partir de `github.repository`, genera un instalador **NSIS firmado** y crea una
-   release en borrador con el instalador, su firma y `latest.json`.
-6. Publica la release terminada. Solo entonces la consulta a la última release
-   pública podrá anunciarla a las instalaciones anteriores.
+Descarga el instalador **NSIS para Windows x64** desde [la última versión](https://github.com/josmad22/ParitySQL/releases/latest). Las compilaciones anteriores que tenían la fuente de actualizaciones vacía requieren esta instalación manual una sola vez.
 
-La URL se construye como
-`https://github.com/PROPIETARIO/REPOSITORIO/releases/latest/download/latest.json`.
-No se necesita incluir un token de GitHub en la aplicación instalada.
+El canal configurado es:
 
-La primera instalación que incluya la configuración real debe distribuirse e
-instalarse manualmente. Una instalación compilada con la configuración vacía no
-puede descubrir por sí misma una URL que aún no conoce. Usa el instalador NSIS
-de esta distribución para las posteriores actualizaciones automáticas.
-
-## Compilación firmada desde Windows
-
-El workflow prepara automáticamente un override ignorado por Git. También puede
-generarse de forma local cuando ya se disponga del repositorio y la clave pública:
-
-```powershell
-./scripts/prepare-release.ps1 -Repository PROPIETARIO/REPOSITORIO -PublicKey (Get-Content RUTA_PUBLICA.pub -Raw)
+```text
+https://github.com/josmad22/ParitySQL/releases/latest/download/latest.json
 ```
 
-Configura `TAURI_SIGNING_PRIVATE_KEY` y, si corresponde,
-`TAURI_SIGNING_PRIVATE_KEY_PASSWORD` como variables de entorno locales. Después:
+Las compilaciones de desarrollo pueden comprobar y descargar versiones, pero no instalar una actualización sobre el proceso de desarrollo.
+
+## Publicar una nueva versión
+
+1. Cambia la versión en `src-tauri/Cargo.toml` y `src-tauri/tauri.conf.json`. Actualiza también el paquete `paritysql` de `Cargo.lock` mediante Cargo.
+2. Ejecuta las pruebas y sube el commit a `main`.
+3. Crea y sube una etiqueta que coincida con esa versión:
 
 ```powershell
-cargo tauri build --locked --config src-tauri/tauri.release.local.json
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
-Las claves privadas solo se utilizan durante la firma. La configuración compilada
-contiene únicamente la clave pública y el endpoint HTTPS. El override es
-`src-tauri/tauri.release.local.json` y está excluido por `*.local.json`.
+El workflow `release.yml` valida la versión y la clave pública, ejecuta las pruebas, compila el instalador y firma el paquete. Primero prepara una release en borrador; al comprobar que existen el instalador, su firma y `latest.json`, la publica automáticamente. Finalmente descarga el paquete público, verifica la firma, rechaza un paquete alterado y comprueba que la misma versión no se ofrece como actualización.
 
-## Validación
+También puedes reejecutar el workflow desde Actions seleccionando una **etiqueta** existente. Si falla antes de publicar, el borrador no se anuncia a los usuarios. No modifiques una etiqueta ya distribuida; publica una versión superior.
 
-Las pruebas Node verifican estados, progreso, ocultación, doble clic, reintentos,
-reinicio explícito y recuperación de operaciones. Las pruebas Rust verifican el
-modo desactivado y el rechazo de configuraciones inseguras.
+## Firma y claves
 
-Una actualización real entre dos instaladores debe probarse cuando existan el
-repositorio y la clave de firma. El modo de desarrollo permite comprobar/descargar
-si se configura, pero bloquea la instalación sobre la aplicación de desarrollo.
+- `tauri.conf.json` contiene únicamente la **clave pública** y la URL del canal.
+- La clave privada y su contraseña están en los secretos de Actions `TAURI_SIGNING_PRIVATE_KEY` y `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
+- `PARITYSQL_UPDATER_PUBLIC_KEY` es una variable pública de Actions; debe coincidir con la clave incluida en el código.
+- La copia privada local está fuera del repositorio, en `%USERPROFILE%/.tauri/ParitySQL/`. La contraseña está protegida con Windows DPAPI para el usuario que configuró la firma; la carpeta tiene acceso restringido.
+- Conserva una copia segura de la clave privada y su contraseña. La copia DPAPI depende del usuario/equipo actual. No regeneres ni cambies la clave para una actualización normal: las instalaciones existentes confían en la clave original.
+- No se distribuye un token de GitHub. El paquete se descarga por HTTPS y su firma se verifica antes de ofrecer reiniciar y antes de instalar. No se permiten downgrades ni excepciones TLS.
 
-Referencia: [plugin oficial Updater de Tauri](https://v2.tauri.app/plugin/updater/).
+Esta firma protege el mecanismo de actualizaciones; no es un certificado Authenticode de Windows.
+
+## Compilación local
+
+El desarrollo y las compilaciones normales no necesitan la clave privada:
+
+```powershell
+cargo tauri dev
+cargo tauri build
+```
+
+Para generar el instalador y su firma desde el usuario de Windows que configuró las claves:
+
+```powershell
+./scripts/build-release.ps1
+```
+
+El script recupera la contraseña protegida, prepara un override ignorado por Git y entrega las claves únicamente al proceso de compilación. Los artefactos quedan en `src-tauri/target/release/bundle/nsis/`.
+
+## Verificación del canal real
+
+Esta prueba usa GitHub y descarga el instalador. No lo instala ni reinicia la aplicación:
+
+```powershell
+cargo test --manifest-path src-tauri/Cargo.toml --locked --lib published_update -- --ignored --nocapture
+```
+
+Las pruebas normales no necesitan red ni claves privadas. Referencia: [Updater oficial de Tauri](https://v2.tauri.app/plugin/updater/).

@@ -23,6 +23,9 @@ tiberius = { version = "0.12", features = ["sql-browser-tokio"] }
 rfd = "0.15"
 tauri-plugin-updater = "2"
 
+[dev-dependencies]
+tauri = { version = "2", features = ["test"] }
+
 [profile.release]
 strip = true
 lto = true

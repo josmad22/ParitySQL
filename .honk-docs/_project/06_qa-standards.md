@@ -30,9 +30,10 @@ cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
 - La configuración de una instalación nueva debe permanecer vacía.
 - Las pruebas no requieren credenciales reales; usan datos sintéticos y temporales
   aislados. La prueba del servidor real es independiente y explícita.
-- No se impone un porcentaje de cobertura aún. El workflow de releases ejecuta pruebas Node y Rust antes de crear el borrador.
+- No se impone un porcentaje de cobertura aún. El workflow de releases ejecuta pruebas Node y Rust antes de publicar la release.
   No hay un workflow de PR; Clippy, formato y pruebas de navegador siguen siendo verificaciones locales.
 
-La instalación real de una actualización necesita dos versiones empaquetadas y
-una fuente y firma configuradas. Las pruebas locales no ejecutan instaladores
+La prueba explícita `published_update` descarga una release real, valida la firma,
+rechaza bytes alterados y comprueba que solo se ofrece a versiones anteriores.
+La instalación y reinicio completos se prueban con dos versiones empaquetadas. Las pruebas locales no ejecutan instaladores
 ni reinician la aplicación del usuario.

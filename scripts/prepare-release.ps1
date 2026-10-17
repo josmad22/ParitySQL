@@ -30,6 +30,9 @@ $cargoPath = Join-Path $projectRoot "src-tauri/Cargo.toml"
 $config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
 $cargo = Get-Content -LiteralPath $cargoPath -Raw
 $packageVersion = [regex]::Match($cargo, '(?m)^version\s*=\s*"([^"]+)"').Groups[1].Value
+if ($config.plugins.updater.pubkey.Trim() -ne $PublicKey.Trim()) {
+    throw "La clave pública de Actions debe coincidir con la incluida en tauri.conf.json."
+}
 if ($config.version -ne $packageVersion) {
     throw "Las versiones de Cargo.toml y tauri.conf.json deben coincidir."
 }

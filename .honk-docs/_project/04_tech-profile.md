@@ -45,7 +45,7 @@ cargo test --manifest-path src-tauri/Cargo.toml --all-targets
 node --test
 
 # Build
-cargo tauri build   # genera .exe (NSIS) + .msi en src-tauri/target/release/bundle
+cargo tauri build   # genera el instalador NSIS en src-tauri/target/release/bundle/nsis
 
 # Lint
 cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
@@ -63,9 +63,9 @@ cargo tauri dev   # ejecuta la app con recarga
 | Variable | Description | Default |
 |---|---|---|
 | Runtime | No requiere variables de entorno; conexiones en `environments.json` y configuración pública de actualización compilada. | — |
-| `TAURI_SIGNING_PRIVATE_KEY` | Solo durante compilaciones firmadas; clave privada fuera del repositorio. | Sin configurar |
-| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Contraseña opcional de la clave de firma durante compilación. | Sin configurar |
-| `PARITYSQL_UPDATER_PUBLIC_KEY` | Variable pública del workflow de releases; véase `docs/UPDATES.md`. | Sin configurar |
+| `TAURI_SIGNING_PRIVATE_KEY` | Solo durante compilaciones firmadas; clave privada fuera del repositorio. | Configurado en GitHub Actions |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Contraseña opcional de la clave de firma durante compilación. | Configurado en GitHub Actions |
+| `PARITYSQL_UPDATER_PUBLIC_KEY` | Variable pública del workflow de releases; véase `docs/UPDATES.md`. | Configurado en GitHub Actions |
 
 ## Forbidden Libraries or Practices
 

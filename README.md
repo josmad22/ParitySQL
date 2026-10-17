@@ -47,7 +47,9 @@ Para generar el instalador:
 cargo tauri build
 ```
 
-Los instaladores se generan en `src-tauri/target/release/bundle/`.
+El instalador Windows NSIS se genera en `src-tauri/target/release/bundle/nsis/`.
+
+También puedes descargarlo desde [la última versión publicada](https://github.com/josmad22/ParitySQL/releases/latest).
 
 ## Pruebas
 
@@ -66,5 +68,5 @@ Las conexiones, incluidas sus contraseñas, se guardan **en texto plano en la co
 
 ## Más información
 
-- [Configurar actualizaciones desde GitHub](docs/UPDATES.md). Permanecen desactivadas hasta configurar el repositorio y la clave pública.
+- [Actualizaciones automáticas y publicación de versiones](docs/UPDATES.md). La aplicación avisa cuando hay una versión superior; permite descargarla y elegir **Reiniciar ahora**.
 - [Arquitectura del proyecto](.honk-docs/_project/03_architecture.md).

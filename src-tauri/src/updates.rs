@@ -57,7 +57,7 @@ impl UpdateSession {
     }
 }
 
-/// La configuración pública puede permanecer vacía hasta publicar el repositorio.
+/// La distribución consulta el feed público firmado de GitHub.
 /// Se exige HTTPS incluso en desarrollo y no se aceptan modos inseguros de TLS.
 fn configured(config: &tauri_plugin_updater::Config) -> bool {
     !config.pubkey.trim().is_empty()
@@ -262,14 +262,19 @@ mod tests {
     }
 
     #[test]
-    fn public_distribution_stays_unconfigured_until_explicitly_enabled() {
+    fn public_distribution_uses_the_signed_github_feed() {
         let config: serde_json::Value =
             serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
         let updater: tauri_plugin_updater::Config =
             serde_json::from_value(config["plugins"]["updater"].clone()).unwrap();
-        assert!(!super::configured(&updater));
-        assert!(updater.pubkey.is_empty());
-        assert!(updater.endpoints.is_empty());
+        assert!(super::configured(&updater));
+        assert_eq!(updater.endpoints.len(), 1);
+        assert_eq!(
+            updater.endpoints[0].as_str(),
+            "https://github.com/josmad22/ParitySQL/releases/latest/download/latest.json"
+        );
+        assert_eq!(config["bundle"]["targets"], serde_json::json!(["nsis"]));
+        // Los artefactos firmados se habilitan solo al compilar una release.
         assert_eq!(config["bundle"]["createUpdaterArtifacts"], false);
     }
 
@@ -284,5 +289,81 @@ mod tests {
         let session = state.lock().await;
         assert!(session.package.is_none());
         assert!(!session.in_progress());
+    }
+}
+
+#[cfg(test)]
+mod published {
+    use std::time::Duration;
+    use tauri::test::{mock_builder, mock_context, noop_assets, MockRuntime};
+    use tauri::App;
+    use tauri_plugin_updater::UpdaterExt;
+
+    fn app_at(version: &str) -> App<MockRuntime> {
+        let config: serde_json::Value =
+            serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
+        let mut context = mock_context(noop_assets());
+        context.package_info_mut().version = version.parse().unwrap();
+        context
+            .config_mut()
+            .plugins
+            .0
+            .insert("updater".into(), config["plugins"]["updater"].clone());
+        mock_builder()
+            .plugin(tauri_plugin_updater::Builder::new().build())
+            .build(context)
+            .unwrap()
+    }
+
+    #[tokio::test]
+    #[ignore = "descarga el instalador público de GitHub; ejecutar tras publicar una release"]
+    async fn published_update_is_signed_and_only_offered_to_older_versions() {
+        let older = app_at("0.0.0");
+        let mut update = older
+            .updater_builder()
+            .target("windows-x86_64")
+            .timeout(Duration::from_secs(60))
+            .build()
+            .unwrap()
+            .check()
+            .await
+            .unwrap()
+            .expect("El feed debe ofrecer la release a una instalación anterior");
+        assert_eq!(update.download_url.scheme(), "https");
+        assert_eq!(update.download_url.host_str(), Some("github.com"));
+        assert!(update
+            .download_url
+            .path()
+            .starts_with("/josmad22/ParitySQL/releases/download/"));
+        assert!(update.download_url.path().ends_with(".exe"));
+        update.timeout = Some(Duration::from_secs(300));
+        let mut received = 0usize;
+        let bytes = update
+            .download(|size, _| received += size, || {})
+            .await
+            .unwrap();
+        assert_eq!(received, bytes.len());
+        assert!(bytes.starts_with(b"MZ"));
+        update.verify(&bytes).unwrap();
+        let mut tampered = bytes.clone();
+        tampered[0] ^= 1;
+        assert!(update.verify(&tampered).is_err());
+
+        let current = app_at(&update.version);
+        assert!(current
+            .updater_builder()
+            .target("windows-x86_64")
+            .timeout(Duration::from_secs(60))
+            .build()
+            .unwrap()
+            .check()
+            .await
+            .unwrap()
+            .is_none());
+        println!(
+            "Release {}: {} bytes verificados; paquete alterado rechazado; versión actual sin aviso.",
+            update.version,
+            bytes.len()
+        );
     }
 }

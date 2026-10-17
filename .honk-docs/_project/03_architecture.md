@@ -74,9 +74,9 @@ extracción como la consulta de definiciones acumulan errores por objeto.
 ## Actualizaciones de la aplicación
 
 - El plugin `tauri-plugin-updater` se usa desde Rust; no se agrega un bundler al frontend.
-- La clave pública y los endpoints son configuración pública de compilación. Se
-  conservan vacíos hasta disponer del repositorio y la firma. Sin ellos no hay
-  consultas de actualización ni avisos ficticios.
+- La clave pública y el endpoint de `josmad22/ParitySQL` están incluidos en la
+  configuración pública de compilación. Solo se anuncia una versión superior
+  publicada en GitHub Releases.
 - La descarga permanece en memoria y no se ofrece reiniciar antes de verificar su
   firma. La instalación vuelve a verificarla. Solo se aceptan fuentes HTTPS y no
   se habilitan excepciones TLS ni downgrades.
@@ -84,8 +84,9 @@ extracción como la consulta de definiciones acumulan errores por objeto.
   el instalador termina el proceso al instalar: por eso la descarga y el reinicio
   solicitado por el usuario son operaciones separadas.
 - El reinicio espera guardados y no interrumpe operaciones o el modal de conexiones.
-- La distribución usa releases NSIS firmadas. El workflow prepara un borrador,
-  instalador, firma y `latest.json`; la publicación del borrador lo hace visible.
+- La distribución usa releases NSIS firmadas. Al subir una etiqueta de versión,
+  el workflow prepara un borrador con instalador, firma y `latest.json`, comprueba
+  sus artefactos y lo publica automáticamente. Después verifica el canal real.
 - La clave privada solo existe como secreto del proceso de firma; no se compila ni
   se guarda en el repositorio. Véase `docs/UPDATES.md`.
 
@@ -96,7 +97,7 @@ extracción como la consulta de definiciones acumulan errores por objeto.
 | SQL Server / TDS | Solo lectura de metadatos mediante `tiberius`, con autenticación SQL o integrada de Windows. |
 | SQL Browser | Resolución de instancias `HOST\INSTANCIA`. |
 | Sistema de archivos | Configuración local y exportación elegida por el usuario. |
-| GitHub Releases / HTTPS | Fuente configurable de versiones y paquetes firmados; inicialmente desactivada. |
+| GitHub Releases / HTTPS | Canal público de versiones y paquetes firmados de `josmad22/ParitySQL`. |
 | Google Fonts | Tipografías opcionales de la interfaz; existen fuentes locales de respaldo. |
 
 Se conserva `com.sphelper.sqlhelptext` como identificador de aplicación para

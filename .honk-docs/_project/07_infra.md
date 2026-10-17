@@ -30,14 +30,15 @@
 ## CI/CD
 
 **Pipeline:** `.github/workflows/release.yml` prepara releases Windows NSIS en
-borrador al crear una etiqueta de versión. Requiere la variable pública
-`PARITYSQL_UPDATER_PUBLIC_KEY` y los secretos de firma de Tauri; inicialmente no
-están configurados. No se han publicado releases ni configurado un repositorio.
+borrador al crear una etiqueta de versión y las publica al completar los artefactos.
+La variable pública `PARITYSQL_UPDATER_PUBLIC_KEY` y los secretos de firma de Tauri
+están configurados en `josmad22/ParitySQL`. El canal usa GitHub Releases por HTTPS.
+Después de publicar se comprueban descarga, firma y comparación de versiones.
 Detalles en `docs/UPDATES.md`.
 
 ```text
 Build manual:
-  cargo tauri build  ->  src-tauri/target/release/bundle/{nsis,msi}
+  cargo tauri build  ->  src-tauri/target/release/bundle/nsis
 ```
 
 **Secretos de publicación:** `TAURI_SIGNING_PRIVATE_KEY` y, si se utiliza,

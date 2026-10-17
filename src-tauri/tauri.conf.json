@@ -25,7 +25,9 @@
   "bundle": {
     "active": true,
     "createUpdaterArtifacts": false,
-    "targets": "all",
+    "targets": [
+      "nsis"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -36,8 +38,10 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "",
-      "endpoints": [],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERDNDVFNEI5Mjk3QjZEMjMKUldRamJYc3B1ZVJGM1BTR2RvdktUTEpXK3ExRlBvQ0FBcWFiNlhSbmMxeHhSOEZkNVdtdEtPTTEK",
+      "endpoints": [
+        "https://github.com/josmad22/ParitySQL/releases/latest/download/latest.json"
+      ],
       "windows": {
         "installMode": "passive"
       }

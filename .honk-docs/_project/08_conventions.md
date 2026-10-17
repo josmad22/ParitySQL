@@ -54,7 +54,7 @@ Init: helptext helper
 **Versioning:** SemVer (versión actual `0.1.0` en `Cargo.toml` y `tauri.conf.json`).
 
 ```text
-[pendiente — proceso de release]
+Commit a main -> etiqueta vX.Y.Z -> pruebas y firma en Actions -> GitHub Release pública
 ```
 
 ## Code Review
