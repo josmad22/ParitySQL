@@ -25,7 +25,7 @@ try {
     & (Join-Path $PSScriptRoot "prepare-release.ps1") -Repository "josmad22/ParitySQL" -PublicKey (Get-Content -LiteralPath $publicPath -Raw)
     Push-Location $projectRoot
     try {
-        cargo tauri build --locked --config src-tauri/tauri.release.local.json
+        cargo tauri build --config src-tauri/tauri.release.local.json -- --locked
         if ($LASTEXITCODE -ne 0) { throw "La compilación firmada no se completó." }
     } finally { Pop-Location }
 } finally {

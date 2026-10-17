@@ -65,7 +65,7 @@ jobs:
             Instalador de ParitySQL para Windows x64 con actualizaciones automáticas.
             Descarga y ejecuta el archivo setup.exe. Las versiones posteriores se ofrecen desde la aplicación.
           generateReleaseNotes: true
-          args: --locked --config src-tauri/tauri.release.local.json
+          args: --config src-tauri/tauri.release.local.json -- --locked
           includeUpdaterJson: true
           updaterJsonPreferNsis: true
       - name: Publicar la release terminada
