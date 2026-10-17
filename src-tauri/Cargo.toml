@@ -1,6 +1,6 @@
 [package]
 name = "paritysql"
-version = "0.1.0"
+version = "0.1.1"
 description = "ParitySQL - Extrae y compara objetos SQL Server"
 authors = ["ParitySQL"]
 edition = "2021"
