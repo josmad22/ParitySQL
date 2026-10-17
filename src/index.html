@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ParitySQL</title>
+  <link rel="icon" type="image/png" sizes="128x128" href="assets/paritysql-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== TOP BAR ===== -->
+  <div class="topbar">
+    <div class="brand">
+      <img class="brand-logo" src="assets/paritysql-icon.png" width="32" height="32" alt="">
+      <div class="brand-text">
+        <div class="brand-name">ParitySQL</div>
+        <div class="brand-sub">Extrae y compara objetos SQL</div>
+      </div>
+    </div>
+
+    <div id="toolPicker" class="tool-picker">
+      <select id="modeSelect" hidden aria-hidden="true" tabindex="-1">
+        <option value="compare" selected>Comparar contenido SP</option>
+        <option value="extract">Extraer objetos</option>
+      </select>
+      <button id="toolButton" class="tool-trigger" type="button" role="combobox" aria-label="Herramienta: Comparar contenido SP" aria-haspopup="listbox" aria-expanded="false" aria-controls="toolList">
+        <span id="toolIcon" class="tool-trigger-icon" aria-hidden="true"></span>
+        <span id="toolLabel">Comparar contenido SP</span>
+        <svg class="tool-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="m3 4.5 3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </button>
+      <div id="toolMenu" class="env-menu tool-menu" hidden>
+        <div class="env-menu-title">HERRAMIENTAS</div>
+        <div id="toolList" role="listbox" aria-label="Herramientas ParitySQL">
+          <div id="toolCompare" class="tool-option" role="option" data-mode="compare" aria-selected="true">
+            <span class="tool-option-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="1.5"></rect><rect x="14" y="4" width="7" height="16" rx="1.5"></rect><path d="M5.5 8h2M5.5 12h2M5.5 16h2M16.5 8h2M16.5 12h2M16.5 16h2"></path></svg></span>
+            <span class="tool-option-copy"><span class="tool-option-title">Comparar contenido SP</span><span class="tool-option-description">Revisa diferencias con el entorno.</span></span>
+            <span class="tool-option-check" aria-hidden="true">✓</span>
+          </div>
+          <div id="toolExtract" class="tool-option" role="option" data-mode="extract" aria-selected="false">
+            <span class="tool-option-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10Z"></path><path d="M13 3v7h7M12 13v5m-3-2 3 3 3-3"></path></svg></span>
+            <span class="tool-option-copy"><span class="tool-option-title">Extraer objetos</span><span class="tool-option-description">Genera scripts de tus objetos SQL.</span></span>
+            <span class="tool-option-check" aria-hidden="true">✓</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <!-- environment selector -->
+    <div class="env-wrap">
+      <div id="envPill" class="env-pill">
+        <span id="envDot" class="env-dot"></span>
+        <div class="env-pill-text">
+          <span id="envName" class="env-pill-name">—</span>
+          <span id="envServer" class="env-pill-server">sin conexión</span>
+        </div>
+        <svg class="env-chevron" width="10" height="10" viewBox="0 0 10 10"><polygon points="1,3 9,3 5,8" fill="#9aa1ad"></polygon></svg>
+      </div>
+      <div id="envMenu" class="env-menu" hidden>
+        <div class="env-menu-title">ENTORNOS</div>
+        <div id="envMenuList"></div>
+        <div id="envMenuManage" class="env-menu-manage">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="#2563eb" stroke-width="1.6"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V15z" stroke="#2563eb" stroke-width="1.4" stroke-linejoin="round"></path></svg>
+          Administrar conexiones
+        </div>
+      </div>
+    </div>
+
+    <!-- database selector -->
+    <div class="db-wrap">
+      <div id="dbBtn" class="db-btn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><ellipse cx="7" cy="3" rx="5" ry="2" stroke="#737a86" stroke-width="1.3"></ellipse><path d="M2 3v8c0 1.1 2.24 2 5 2s5-.9 5-2V3" stroke="#737a86" stroke-width="1.3"></path><path d="M2 7c0 1.1 2.24 2 5 2s5-.9 5-2" stroke="#737a86" stroke-width="1.3"></path></svg>
+        <span id="currentDb" class="db-name">—</span>
+        <svg width="10" height="10" viewBox="0 0 10 10"><polygon points="1,3 9,3 5,8" fill="#9aa1ad"></polygon></svg>
+      </div>
+      <div id="dbMenu" class="db-menu" hidden>
+        <div class="db-search">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.3" stroke="#9aa1ad" stroke-width="1.3"></circle><path d="M9.4 9.4L12 12" stroke="#9aa1ad" stroke-width="1.3" stroke-linecap="round"></path></svg>
+          <input id="dbSearch" type="text" placeholder="Buscar base de datos…" autocomplete="off" spellcheck="false">
+          <span id="dbCount" class="db-count"></span>
+        </div>
+        <div id="dbList" class="db-list cscroll"></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- connections manager -->
+    <div id="connBtn" class="btn-ghost">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="#737a86" stroke-width="1.6"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V15z" stroke="#737a86" stroke-width="1.4" stroke-linejoin="round"></path></svg>
+      Conexiones
+    </div>
+
+    <!-- run -->
+    <button id="runBtn" class="btn-primary" type="button" hidden>
+      <svg width="11" height="11" viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11" fill="#ffffff"></polygon></svg>
+      Ejecutar
+      <span class="kbd">Ctrl R</span>
+    </button>
+    <button id="compareBtn" class="btn-primary" type="button">
+      <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><polygon points="2,1 11,6 2,11" fill="#ffffff"></polygon></svg>
+      <span id="compareBtnText">Procesar y comparar</span>
+      <span class="kbd">Ctrl R</span>
+    </button>
+  </div>
+
+  <!-- ===== MAIN ===== -->
+  <div id="extractView" class="main" hidden>
+
+    <!-- LEFT: input -->
+    <div class="pane-left">
+      <div class="pane-head">
+        <div class="pane-head-row">
+          <div class="pane-title">Objetos</div>
+          <div id="queueCount" class="queue-badge">0 en cola</div>
+        </div>
+        <div class="pane-hint">Un objeto por línea. Sin esquema asume <span class="mono">dbo</span>; si lo indicas, se respeta.</div>
+      </div>
+      <div class="obj-input-wrap">
+        <input id="objAdd" class="obj-add" type="text" spellcheck="false" autocomplete="off" placeholder="Escribe o pega objetos y pulsa Enter…">
+      </div>
+      <div id="objList" class="obj-list cscroll"></div>
+      <div class="pane-foot">
+        <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="10" rx="2.5" fill="none" stroke="#c2c8d2" stroke-width="1.2"></rect></svg>
+        <span>Un objeto por línea · pega varios a la vez</span>
+        <div class="spacer"></div>
+        <span id="objClear" class="obj-clear" hidden>Vaciar</span>
+      </div>
+    </div>
+
+    <!-- RIGHT: result -->
+    <div class="pane-right">
+      <div class="result-head">
+        <div class="pane-title">Resultado</div>
+        <div id="resultMeta" class="result-meta">listo para ejecutar</div>
+        <div class="spacer"></div>
+        <div class="result-actions">
+          <div id="copyBtn" class="btn-ghost sm">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="3.2" y="3.2" width="7" height="7" rx="1.6" stroke="#737a86" stroke-width="1.3"></rect><path d="M2.2 8.2V2.2h6" stroke="#737a86" stroke-width="1.3"></path></svg>
+            Copiar todo
+          </div>
+          <div id="downloadBtn" class="btn-ghost sm">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1.5v7.5" stroke="#737a86" stroke-width="1.3"></path><path d="M4 6l3 3 3-3" stroke="#737a86" stroke-width="1.3" fill="none"></path><path d="M2.5 11.5h9" stroke="#737a86" stroke-width="1.3"></path></svg>
+            Descargar .sql
+          </div>
+        </div>
+      </div>
+
+      <div id="resultBody" class="result-body cscroll">
+        <div id="emptyState" class="empty-state">
+          <div class="empty-badge">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M9 5H5v14h14v-4M14 5h5v5M19 5l-8 8" stroke="#c2c8d2" stroke-width="1.6" stroke-linecap="round"></path></svg>
+          </div>
+          <div class="empty-title">Sin resultados todavía</div>
+          <div class="empty-sub">Escribe los objetos a la izquierda, elige la base de datos y pulsa <b>Ejecutar</b>.</div>
+        </div>
+        <div id="codeView" class="code-view" hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COMPARAR CONTENIDO ===== -->
+  <div id="compareView" class="compare-main">
+    <section id="sourceControls" class="source-controls" aria-label="Contenido y objetos a comparar">
+      <div class="source-controls-bar">
+        <div class="source-documents">
+          <label for="sourceDocument">Contenido</label>
+          <select id="sourceDocument" aria-label="Contenido origen"></select>
+          <button id="removeSourceBtn" class="source-link" type="button" hidden>Quitar archivo</button>
+        </div>
+        <div class="source-actions">
+          <button id="importSqlBtn" class="btn-ghost sm" type="button">Importar .sql</button>
+          <input id="sqlFiles" type="file" accept=".sql" multiple hidden>
+          <button id="clearSourcesBtn" class="btn-ghost sm" type="button">Vaciar</button>
+        </div>
+      </div>
+      <div id="sourceHint" class="pane-hint source-controls-hint">Pega código o arrastra archivos .sql. Los objetos se detectan y comparan automáticamente.</div>
+      <div id="sourceIssues" class="source-issues cscroll" role="status" hidden></div>
+      <div class="objects-toolbar">
+        <div class="objects-heading">
+          <span class="objects-heading-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="3" y="2" width="10" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M6 5h4M6 8h4M6 11h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span>
+          <span id="objectsTitle" class="pane-title">Objetos detectados</span>
+          <span id="detectedCount" class="objects-count" aria-live="polite">0 objetos</span>
+          <span id="changedCount" class="objects-count changed">0 con cambios</span>
+          <span id="sameCount" class="objects-count same">0 sin cambios</span>
+          <span id="selectedCount" class="objects-count selected">0 seleccionados</span>
+        </div>
+        <div class="objects-tools">
+          <div class="object-search-wrap">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="4.3" stroke="currentColor" stroke-width="1.3"/><path d="M9.4 9.4L12 12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <input id="objectSearch" type="search" placeholder="Buscar por nombre de objeto…" aria-label="Buscar por nombre de objeto" autocomplete="off" spellcheck="false">
+          </div>
+          <div id="objectFilters" class="object-filters" role="group" aria-label="Filtrar objetos">
+            <button type="button" data-object-filter="all" aria-pressed="true">Todos (0)</button>
+            <button type="button" data-object-filter="changed" aria-pressed="false">Con cambios (0)</button>
+            <button type="button" data-object-filter="same" aria-pressed="false">Sin cambios (0)</button>
+            <button type="button" data-object-filter="procedure" aria-pressed="false">SP (0)</button>
+            <button type="button" data-object-filter="function" aria-pressed="false">Funciones (0)</button>
+          </div>
+        </div>
+      </div>
+      <div id="detectedObjects" class="detected-objects cscroll">
+        <table class="objects-table" aria-labelledby="objectsTitle">
+          <colgroup><col class="object-select-col"><col class="object-number-col"><col class="object-name-col"><col class="object-type-col"><col><col class="object-status-col"></colgroup>
+          <thead><tr>
+            <th scope="col"><span class="sr-only">Seleccionar objeto</span></th>
+            <th scope="col" aria-sort="ascending"><button type="button" data-object-sort="number"># <span aria-hidden="true">↑</span></button></th>
+            <th scope="col" aria-sort="none"><button type="button" data-object-sort="name">Nombre del objeto <span aria-hidden="true">↕</span></button></th>
+            <th scope="col" aria-sort="none"><button type="button" data-object-sort="kind">Tipo <span aria-hidden="true">↕</span></button></th>
+            <th scope="col" aria-sort="none"><button type="button" data-object-sort="source">Archivo / Origen <span aria-hidden="true">↕</span></button></th>
+            <th scope="col" aria-sort="none"><button type="button" data-object-sort="status">Estado <span aria-hidden="true">↕</span></button></th>
+          </tr></thead>
+          <tbody id="detectedObjectRows"></tbody>
+        </table>
+      </div>
+      <div class="objects-footer">
+        <span id="compareSummary" class="compare-summary" role="status" aria-live="polite"></span>
+        <span id="objectFilterNote"></span>
+        <span id="visibleObjectCount" aria-live="polite">Mostrando 0 de 0 objetos</span>
+      </div>
+      <div id="comparisonDetails" class="comparison-details" hidden></div>
+    </section>
+    <section id="sourcePane" class="compare-pane" aria-labelledby="sourceTitle">
+      <div class="compare-head">
+        <div class="pane-head-row">
+          <label id="sourceTitle" class="pane-title" for="sourceSql">Origen · Versión propuesta</label>
+        </div>
+        <div class="source-editor-context">
+          <span id="sourceEditorLabel">Contenido pegado</span>
+          <button id="showSourceBtn" class="source-link" type="button" hidden>Editar contenido completo</button>
+        </div>
+      </div>
+      <div id="sourceInputEditor" class="source-editor">
+        <div class="source-gutter" aria-hidden="true"><div id="sourceLines">1</div></div>
+        <div class="source-code-wrap">
+          <pre id="sourceHighlight" class="sql-editor-code" aria-hidden="true"></pre>
+          <textarea id="sourceSql" class="sql-editor-code cscroll" aria-describedby="sourceHint" spellcheck="false" autocapitalize="off" wrap="off" placeholder="CREATE PROCEDURE dbo.MiProcedimiento…"></textarea>
+        </div>
+      </div>
+      <div id="sourceDiffWrap" class="comparison-scroll-wrap" hidden>
+        <div id="sourceDiff" class="compare-results source-diff cscroll" tabindex="0" aria-label="Versión propuesta del origen alineada con el entorno" hidden></div>
+        <nav id="sourceChanges" class="change-overview" aria-label="Diferencias del origen" hidden></nav>
+      </div>
+    </section>
+    <section class="compare-pane" aria-labelledby="targetTitle">
+      <div class="compare-head">
+        <div class="pane-head-row">
+          <div class="compare-heading">
+            <div id="targetTitle" class="pane-title">Entorno · Versión actual</div>
+            <span id="compareEnv" class="compare-env">Sin entorno</span>
+          </div>
+        </div>
+        <div id="compareHint" class="pane-hint">Objetos recuperados y listos para revisar.</div>
+      </div>
+      <div class="comparison-scroll-wrap">
+        <div id="compareResults" class="compare-results cscroll" aria-busy="false" tabindex="0" aria-label="Versión actual del entorno alineada con el origen">
+          <div class="empty-state">
+            <div class="empty-title">Sin comparación todavía</div>
+            <div class="empty-sub">Pega código o importa archivos .sql para identificar los objetos y compararlos con el entorno seleccionado.</div>
+          </div>
+        </div>
+        <nav id="targetChanges" class="change-overview" aria-label="Diferencias del entorno" hidden></nav>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== MODAL: connection ===== -->
+  <div id="modal" class="modal-overlay" hidden>
+    <div class="modal" id="modalCard">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">Conexión a SQL Server</div>
+          <div class="modal-sub">Guarda los entornos y elige la base de datos por defecto.</div>
+        </div>
+        <div class="spacer"></div>
+        <div id="modalClose" class="icon-btn">
+          <svg width="15" height="15" viewBox="0 0 15 15"><path d="M3 3l9 9M12 3l-9 9" stroke="currentColor" stroke-width="1.5"></path></svg>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <!-- saved envs -->
+        <div class="env-side">
+          <div class="env-side-title">ENTORNOS</div>
+          <div id="envList"></div>
+          <div id="newEnvBtn" class="env-add">
+            <svg width="13" height="13" viewBox="0 0 13 13"><path d="M6.5 2v9M2 6.5h9" stroke="#2563eb" stroke-width="1.5"></path></svg>
+            Nuevo entorno
+          </div>
+        </div>
+
+        <!-- form -->
+        <div class="env-form cscroll">
+          <div class="field">
+            <label>Nombre del entorno</label>
+            <input id="fName" type="text" autocomplete="off">
+          </div>
+
+          <div class="field-grid two-a">
+            <div class="field">
+              <label>Servidor</label>
+              <input id="fServer" class="mono" type="text" autocomplete="off" placeholder="HOST\INSTANCIA o HOST">
+            </div>
+            <div class="field">
+              <label>Puerto</label>
+              <input id="fPort" class="mono" type="text" autocomplete="off" placeholder="1433">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Autenticación</label>
+            <div class="auth-toggle">
+              <div id="authSql" class="auth-opt active">
+                <span class="auth-radio"></span> SQL Server
+              </div>
+              <div id="authWin" class="auth-opt">
+                <span class="auth-radio"></span> Windows
+              </div>
+            </div>
+          </div>
+
+          <div id="credGrid" class="field-grid two">
+            <div class="field">
+              <label>Usuario</label>
+              <input id="fUser" class="mono" type="text" autocomplete="off">
+            </div>
+            <div class="field">
+              <label>Contraseña</label>
+              <input id="fPass" class="mono" type="password" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Base de datos por defecto <span class="opt">(opcional)</span></label>
+            <div class="fdb-wrap">
+              <div id="fDbBtn" class="fdb-btn">
+                <span id="fDbValue" class="fdb-value placeholder">Seleccionar…</span>
+                <span id="fDbSpinner" class="spinner" hidden></span>
+                <svg class="fdb-chevron" width="10" height="10" viewBox="0 0 10 10"><polygon points="1,3 9,3 5,8" fill="#9aa1ad"></polygon></svg>
+              </div>
+              <div id="fDbMenu" class="fdb-menu" hidden>
+                <div class="db-search">
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.3" stroke="#9aa1ad" stroke-width="1.3"></circle><path d="M9.4 9.4L12 12" stroke="#9aa1ad" stroke-width="1.3" stroke-linecap="round"></path></svg>
+                  <input id="fDbSearch" type="text" placeholder="Buscar…" autocomplete="off" spellcheck="false">
+                </div>
+                <div id="fDbList" class="db-list cscroll"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="connStatus" class="conn-status idle">
+            <span class="conn-dot"></span>
+            <span id="connStatusText" class="conn-status-text">Sin probar</span>
+            <span id="connStatusMeta" class="conn-status-meta"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <div id="testBtn" class="btn-ghost">
+          <svg width="13" height="13" viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11" fill="#4b5563"></polygon></svg>
+          Probar conexión
+        </div>
+        <div class="spacer"></div>
+        <div id="deleteEnvBtn" class="btn-text danger">Eliminar</div>
+        <div id="cancelBtn" class="btn-text">Cancelar</div>
+        <div id="saveBtn" class="btn-primary solid">Guardar entorno</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast -->
+  <div id="toast" class="toast" hidden></div>
+
+  <button id="updateButton" class="update-float" type="button" aria-describedby="updateAnnouncement" hidden>
+    <svg id="updateDownloadIcon" class="update-float-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"></path><path d="M6.2 6.2A8 8 0 0 1 19.6 9M4.4 15A8 8 0 0 0 17.8 17.8"></path></svg>
+    <svg id="updateRestartIcon" class="update-float-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M3 10a9 9 0 1 1 2.6 8.4M3 4v6h6"></path></svg>
+    <span id="updateLabel">Nueva versión disponible</span>
+    <span id="updateProgress" class="update-progress" role="progressbar" aria-label="Descarga de actualización" aria-valuemin="0" aria-valuemax="100" hidden></span>
+  </button>
+  <span id="updateAnnouncement" class="update-announcement" role="status" aria-live="polite" aria-atomic="true"></span>
+</div>
+
+<script src="highlight.js"></script>
+<script src="compare.js"></script>
+<script src="compare-workspace.js"></script>
+<script src="updates.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

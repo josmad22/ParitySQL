@@ -1,0 +1,62 @@
+name: Publicar versión de ParitySQL
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: paritysql-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    env:
+      PARITYSQL_UPDATER_PUBLIC_KEY: ${{ vars.PARITYSQL_UPDATER_PUBLIC_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar configuración de publicación
+        shell: pwsh
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          RELEASE_REPOSITORY: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_REF_TYPE: ${{ github.ref_type }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:TAURI_SIGNING_PRIVATE_KEY)) {
+            throw "Configura el secreto TAURI_SIGNING_PRIVATE_KEY antes de publicar."
+          }
+          if ($env:RELEASE_REF_TYPE -ne "tag") {
+            throw "Ejecuta este workflow sobre una etiqueta de versión, por ejemplo v0.1.0."
+          }
+          ./scripts/prepare-release.ps1 -Repository $env:RELEASE_REPOSITORY -PublicKey $env:PARITYSQL_UPDATER_PUBLIC_KEY -Tag $env:RELEASE_TAG
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar regresiones
+        shell: pwsh
+        run: |
+          node --test
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --manifest-path src-tauri/Cargo.toml --locked --all-targets
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Compilar y preparar release firmada
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: ParitySQL ${{ github.ref_name }}
+          releaseDraft: true
+          prerelease: false
+          args: --locked --config src-tauri/tauri.release.local.json
+          includeUpdaterJson: true
+          updaterJsonPreferNsis: true

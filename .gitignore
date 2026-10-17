@@ -1,0 +1,37 @@
+# Rust / Tauri
+/src-tauri/target
+/src-tauri/gen/schemas
+
+# app icon source (opcional)
+# /src-tauri/app-icon.png
+
+# OS
+Thumbs.db
+.DS_Store
+
+# HonkFlow local config (per-machine, do not commit)
+.claude/honk.config.local.json
+.claude/settings.local.json
+
+# Conexiones, credenciales y ajustes privados
+.env
+.env.*
+environments.json
+environments.*.json
+.environments-*.tmp
+*.local.json
+*.local.toml
+*.local.yaml
+*.local.yml
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Exportaciones de bases de datos y archivos de trabajo
+*.sql
+*.bak
+*.bacpac
+*.mdf
+*.ldf
+*.log

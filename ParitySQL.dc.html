@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body { font-family: "Instrument Sans", system-ui, sans-serif; color: #1e2430; background: #eceef2; -webkit-font-smoothing: antialiased; }
+  a { color: #2563eb; text-decoration: none; }
+  a:hover { color: #1d4fd7; }
+  textarea { font-family: "JetBrains Mono", monospace; }
+  ::selection { background: #dbe6ff; }
+  .cscroll::-webkit-scrollbar { width: 12px; height: 12px; }
+  .cscroll::-webkit-scrollbar-thumb { background: #d3d8e0; border: 3px solid transparent; background-clip: content-box; border-radius: 8px; }
+  .cscroll::-webkit-scrollbar-thumb:hover { background: #b9c0cc; background-clip: content-box; }
+</style>
+</helmet>
+
+<div style="height: 100vh; width: 100vw; display: flex; flex-direction: column; overflow: hidden; background: #eceef2;">
+
+  <!-- ===== TOP BAR (desktop app toolbar) ===== -->
+  <div style="height: 54px; flex: 0 0 54px; display: flex; align-items: center; gap: 16px; padding: 0 16px; background: #ffffff; border-bottom: 1px solid #e3e6ea;">
+
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 26px; height: 26px; border-radius: 7px; background: #2563eb; display: flex; align-items: center; justify-content: center;">
+        <svg width="13" height="13" viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11" fill="#ffffff"></polygon></svg>
+      </div>
+      <div style="font-weight: 700; font-size: 14.5px; letter-spacing: -0.2px;">ParitySQL</div>
+      <div style="font-size: 12px; color: #9aa1ad; font-weight: 500; padding-top: 1px;">Generador de scripts</div>
+    </div>
+
+    <div style="flex: 1;"></div>
+
+    <!-- environment pill -->
+    <div onClick="{{ openModal }}" style="display: {{ envDisplay }}; align-items: center; gap: 9px; height: 34px; padding: 0 13px; border: 1px solid #e3e6ea; border-radius: 8px; cursor: pointer; background: #fbfcfd;" style-hover="border-color: #c9cfd8; background: #f5f7f9;">
+      <span style="width: 8px; height: 8px; border-radius: 50%; background: #16a34a; box-shadow: 0 0 0 3px #dcfce7;"></span>
+      <div style="display: flex; flex-direction: column; line-height: 1.1;">
+        <span style="font-size: 12.5px; font-weight: 600;">{{ envName }}</span>
+        <span style="font-size: 10.5px; color: #9aa1ad; font-weight: 500;">{{ envServer }}</span>
+      </div>
+    </div>
+
+    <!-- database selector -->
+    <div style="position: relative;">
+      <div onClick="{{ toggleDb }}" style="display: flex; align-items: center; gap: 9px; height: 34px; padding: 0 12px; border: 1px solid #e3e6ea; border-radius: 8px; cursor: pointer; background: #fbfcfd;" style-hover="border-color: #c9cfd8;">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><ellipse cx="7" cy="3" rx="5" ry="2" stroke="#737a86" stroke-width="1.3"></ellipse><path d="M2 3v8c0 1.1 2.24 2 5 2s5-.9 5-2V3" stroke="#737a86" stroke-width="1.3"></path><path d="M2 7c0 1.1 2.24 2 5 2s5-.9 5-2" stroke="#737a86" stroke-width="1.3"></path></svg>
+        <span style="font-size: 12.5px; font-weight: 600; min-width: 72px;">{{ currentDb }}</span>
+        <svg width="10" height="10" viewBox="0 0 10 10"><polygon points="1,3 9,3 5,8" fill="#9aa1ad"></polygon></svg>
+      </div>
+      <div style="display: {{ dbMenuDisplay }}; position: absolute; top: 40px; right: 0; width: 210px; background: #ffffff; border: 1px solid #e3e6ea; border-radius: 10px; box-shadow: 0 12px 32px rgba(20,28,46,0.14); padding: 6px; z-index: 40;">
+        <div style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; color: #9aa1ad; padding: 8px 10px 6px;">BASES DE DATOS</div>
+        <sc-for list="{{ databases }}" as="db" hint-placeholder-count="4">
+          <div onClick="{{ db.select }}" style="display: flex; align-items: center; justify-content: space-between; padding: 9px 10px; border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 500;" style-hover="background: #f2f5f9;">
+            <span>{{ db.name }}</span>
+            <span style="display: {{ db.checkDisplay }}; color: #2563eb; font-weight: 700;">✓</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="width: 1px; height: 26px; background: #e3e6ea; margin: 0 2px;"></div>
+
+    <!-- config / settings -->
+    <div onClick="{{ openModal }}" style="display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 13px; border: 1px solid #e3e6ea; border-radius: 8px; cursor: pointer; background: #fbfcfd; font-size: 12.5px; font-weight: 600; color: #4b5563;" style-hover="border-color: #c9cfd8; background: #f5f7f9;">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2.3" stroke="#737a86" stroke-width="1.3"></circle><circle cx="7" cy="7" r="5.2" stroke="#737a86" stroke-width="1.3" stroke-dasharray="1.6 2.4"></circle></svg>
+      Conexión
+    </div>
+
+    <!-- run -->
+    <div onClick="{{ noop }}" style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 14px 0 15px; border-radius: 8px; cursor: pointer; background: #2563eb; color: #ffffff; font-size: 13px; font-weight: 600; box-shadow: 0 1px 2px rgba(37,99,235,0.35);" style-hover="background: #1d4fd7;">
+      <svg width="11" height="11" viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11" fill="#ffffff"></polygon></svg>
+      Ejecutar
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; background: rgba(255,255,255,0.18); padding: 2px 6px; border-radius: 5px; font-weight: 500;">Ctrl R</span>
+    </div>
+  </div>
+
+  <!-- ===== MAIN ===== -->
+  <div style="flex: 1; display: grid; grid-template-columns: 372px 1fr; min-height: 0;">
+
+    <!-- LEFT: input list -->
+    <div style="display: flex; flex-direction: column; min-height: 0; background: #ffffff; border-right: 1px solid #e3e6ea;">
+      <div style="padding: 16px 18px 12px; border-bottom: 1px solid #eef0f3;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+          <div style="font-size: 13.5px; font-weight: 700;">Objetos</div>
+          <div style="font-size: 11.5px; font-weight: 600; color: #2563eb; background: #eaf1ff; padding: 3px 9px; border-radius: 20px;">4 en cola</div>
+        </div>
+        <div style="font-size: 11.5px; color: #9aa1ad; line-height: 1.45;">Un objeto por línea. Sin esquema asume <span style="font-family: 'JetBrains Mono', monospace; color: #6b7280;">dbo</span>; si lo indicas, se respeta.</div>
+      </div>
+      <textarea spellcheck="false" style="flex: 1; min-height: 0; width: 100%; resize: none; border: none; outline: none; padding: 16px 18px; font-size: 13.5px; line-height: 1.9; color: #263042; background: #ffffff;">usp_Cliente_Listar
+dbo.usp_Factura_Anular
+ventas.usp_Pedido_Insertar
+fn_CalcularEdad</textarea>
+      <div style="padding: 11px 18px; border-top: 1px solid #eef0f3; display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: #9aa1ad;">
+        <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1" y="1" width="10" height="10" rx="2.5" fill="none" stroke="#c2c8d2" stroke-width="1.2"></rect></svg>
+        Pega tu lista con saltos de línea
+      </div>
+    </div>
+
+    <!-- RIGHT: result -->
+    <div style="display: flex; flex-direction: column; min-height: 0; background: #f7f8fa;">
+      <div style="height: 48px; flex: 0 0 48px; display: flex; align-items: center; padding: 0 16px 0 20px; border-bottom: 1px solid #e7eaee; background: #ffffff;">
+        <div style="font-size: 13.5px; font-weight: 700;">Resultado</div>
+        <div style="font-size: 11.5px; color: #9aa1ad; font-weight: 500; margin-left: 10px;">4 objetos · 118 líneas</div>
+        <div style="flex: 1;"></div>
+        <div style="display: flex; gap: 8px;">
+          <div onClick="{{ noop }}" style="display: flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border: 1px solid #e3e6ea; border-radius: 7px; cursor: pointer; background: #fbfcfd; font-size: 12.5px; font-weight: 600; color: #4b5563;" style-hover="border-color: #c9cfd8; background: #f5f7f9;">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="3.2" y="3.2" width="7" height="7" rx="1.6" stroke="#737a86" stroke-width="1.3"></rect><path d="M2.2 8.2V2.2h6" stroke="#737a86" stroke-width="1.3"></path></svg>
+            Copiar todo
+          </div>
+          <div onClick="{{ noop }}" style="display: flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border: 1px solid #e3e6ea; border-radius: 7px; cursor: pointer; background: #fbfcfd; font-size: 12.5px; font-weight: 600; color: #4b5563;" style-hover="border-color: #c9cfd8; background: #f5f7f9;">
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1.5v7.5" stroke="#737a86" stroke-width="1.3"></path><path d="M4 6l3 3 3-3" stroke="#737a86" stroke-width="1.3" fill="none"></path><path d="M2.5 11.5h9" stroke="#737a86" stroke-width="1.3"></path></svg>
+            Descargar .sql
+          </div>
+        </div>
+      </div>
+
+      <div class="cscroll" style="flex: 1; min-height: 0; overflow: auto; padding: 22px 26px 40px;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: {{ codeLH }}; white-space: {{ codeWS }}; color: #2b3648;">
+          <div><span style="color:#9aa1ad;font-style:italic">/* ═══════════════════════════════════════════════════</span></div>
+          <div><span style="color:#9aa1ad;font-style:italic">   Objeto 1 de 4  ·  dbo.usp_Cliente_Listar</span></div>
+          <div><span style="color:#9aa1ad;font-style:italic">   ═══════════════════════════════════════════════════ */</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">IF</span> <span style="color:#0e7490"> OBJECT_ID</span><span>(</span><span style="color:#15803d">'dbo.usp_Cliente_Listar'</span><span>, </span><span style="color:#15803d">'P'</span><span>) </span><span style="color:#7c3aed;font-weight:500">IS NOT NULL</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">    DROP PROCEDURE</span> <span style="color:#2563eb">dbo.usp_Cliente_Listar</span><span>;</span></div>
+          <div><span style="color:#b45309;font-weight:600">GO</span></div>
+          <div><span style="color:#9aa1ad;font-style:italic">-- =============================================</span></div>
+          <div><span style="color:#9aa1ad;font-style:italic">-- Author:      Equipo Datos</span></div>
+          <div><span style="color:#9aa1ad;font-style:italic">-- Create date: 2024-11-02</span></div>
+          <div><span style="color:#9aa1ad;font-style:italic">-- Description: Lista los clientes activos</span></div>
+          <div><span style="color:#9aa1ad;font-style:italic">-- =============================================</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">CREATE PROCEDURE</span> <span style="color:#2563eb">dbo.usp_Cliente_Listar</span></div>
+          <div><span style="color:#c2410c">    @Activo</span> <span style="color:#0e7490">BIT</span> <span>= </span><span style="color:#c2410c">1</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">AS</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">BEGIN</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">    SET</span><span> NOCOUNT </span><span style="color:#7c3aed;font-weight:500">ON</span><span>;</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">    SELECT</span><span> ClienteId, Nombre, Correo, FechaAlta</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">    FROM</span><span> dbo.Cliente</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">    WHERE</span><span> Activo = </span><span style="color:#c2410c">@Activo</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">    ORDER BY</span><span> Nombre;</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">END</span></div>
+          <div><span style="color:#b45309;font-weight:600">GO</span></div>
+          <div>&nbsp;</div>
+          <div><span style="color:#9aa1ad;font-style:italic">/* ═══════════════════════════════════════════════════</span></div>
+          <div><span style="color:#9aa1ad;font-style:italic">   Objeto 2 de 4  ·  dbo.usp_Factura_Anular</span></div>
+          <div><span style="color:#9aa1ad;font-style:italic">   ═══════════════════════════════════════════════════ */</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">IF</span> <span style="color:#0e7490"> OBJECT_ID</span><span>(</span><span style="color:#15803d">'dbo.usp_Factura_Anular'</span><span>, </span><span style="color:#15803d">'P'</span><span>) </span><span style="color:#7c3aed;font-weight:500">IS NOT NULL</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">    DROP PROCEDURE</span> <span style="color:#2563eb">dbo.usp_Factura_Anular</span><span>;</span></div>
+          <div><span style="color:#b45309;font-weight:600">GO</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">CREATE PROCEDURE</span> <span style="color:#2563eb">dbo.usp_Factura_Anular</span></div>
+          <div><span style="color:#c2410c">    @FacturaId</span> <span style="color:#0e7490">INT</span><span>,</span></div>
+          <div><span style="color:#c2410c">    @Motivo</span><span>    </span><span style="color:#0e7490">NVARCHAR</span><span>(</span><span style="color:#c2410c">200</span><span>)</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">AS</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">BEGIN</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">    SET</span><span> NOCOUNT </span><span style="color:#7c3aed;font-weight:500">ON</span><span>;</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">    UPDATE</span><span> dbo.Factura</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">       SET</span><span> Estado = </span><span style="color:#15803d">'ANULADA'</span><span>, MotivoAnulacion = </span><span style="color:#c2410c">@Motivo</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">     WHERE</span><span> FacturaId = </span><span style="color:#c2410c">@FacturaId</span><span>;</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">END</span></div>
+          <div><span style="color:#b45309;font-weight:600">GO</span></div>
+          <div>&nbsp;</div>
+          <div><span style="color:#9aa1ad;font-style:italic">/* ═══════════════════════════════════════════════════</span></div>
+          <div><span style="color:#9aa1ad;font-style:italic">   Objeto 3 de 4  ·  ventas.usp_Pedido_Insertar</span></div>
+          <div><span style="color:#9aa1ad;font-style:italic">   ═══════════════════════════════════════════════════ */</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">IF</span> <span style="color:#0e7490"> OBJECT_ID</span><span>(</span><span style="color:#15803d">'ventas.usp_Pedido_Insertar'</span><span>, </span><span style="color:#15803d">'P'</span><span>) </span><span style="color:#7c3aed;font-weight:500">IS NOT NULL</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">    DROP PROCEDURE</span> <span style="color:#2563eb">ventas.usp_Pedido_Insertar</span><span>;</span></div>
+          <div><span style="color:#b45309;font-weight:600">GO</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">CREATE PROCEDURE</span> <span style="color:#2563eb">ventas.usp_Pedido_Insertar</span></div>
+          <div><span style="color:#c2410c">    @ClienteId</span> <span style="color:#0e7490">INT</span><span>,</span></div>
+          <div><span style="color:#c2410c">    @Total</span><span>     </span><span style="color:#0e7490">DECIMAL</span><span>(</span><span style="color:#c2410c">12</span><span>,</span><span style="color:#c2410c">2</span><span>)</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">AS</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">BEGIN</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">    SET</span><span> NOCOUNT </span><span style="color:#7c3aed;font-weight:500">ON</span><span>;</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">    INSERT INTO</span><span> ventas.Pedido (ClienteId, Total, FechaPedido)</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">    VALUES</span><span> (</span><span style="color:#c2410c">@ClienteId</span><span>, </span><span style="color:#c2410c">@Total</span><span>, </span><span style="color:#0e7490">SYSDATETIME</span><span>());</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">END</span></div>
+          <div><span style="color:#b45309;font-weight:600">GO</span></div>
+          <div>&nbsp;</div>
+          <div><span style="color:#9aa1ad;font-style:italic">/* ═══════════════════════════════════════════════════</span></div>
+          <div><span style="color:#9aa1ad;font-style:italic">   Objeto 4 de 4  ·  dbo.fn_CalcularEdad  (función)</span></div>
+          <div><span style="color:#9aa1ad;font-style:italic">   ═══════════════════════════════════════════════════ */</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">IF</span> <span style="color:#0e7490"> OBJECT_ID</span><span>(</span><span style="color:#15803d">'dbo.fn_CalcularEdad'</span><span>, </span><span style="color:#15803d">'FN'</span><span>) </span><span style="color:#7c3aed;font-weight:500">IS NOT NULL</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">    DROP FUNCTION</span> <span style="color:#2563eb">dbo.fn_CalcularEdad</span><span>;</span></div>
+          <div><span style="color:#b45309;font-weight:600">GO</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">CREATE FUNCTION</span> <span style="color:#2563eb">dbo.fn_CalcularEdad</span> <span>(</span><span style="color:#c2410c">@Fecha</span> <span style="color:#0e7490">DATE</span><span>)</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">RETURNS</span> <span style="color:#0e7490">INT</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">AS</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">BEGIN</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">    RETURN</span> <span style="color:#0e7490">DATEDIFF</span><span>(</span><span style="color:#0e7490">YEAR</span><span>, </span><span style="color:#c2410c">@Fecha</span><span>, </span><span style="color:#0e7490">GETDATE</span><span>());</span></div>
+          <div><span style="color:#7c3aed;font-weight:500">END</span></div>
+          <div><span style="color:#b45309;font-weight:600">GO</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: connection ===== -->
+  <div style="display: {{ modalDisplay }}; position: fixed; inset: 0; background: rgba(22,28,42,0.42); backdrop-filter: blur(2px); align-items: center; justify-content: center; z-index: 100;" onClick="{{ closeModal }}">
+    <div onClick="{{ stop }}" style="width: 720px; max-width: calc(100vw - 48px); max-height: calc(100vh - 64px); background: #ffffff; border-radius: 16px; box-shadow: 0 24px 70px rgba(15,23,42,0.32); display: flex; flex-direction: column; overflow: hidden;">
+
+      <div style="display: flex; align-items: center; padding: 20px 24px; border-bottom: 1px solid #eef0f3;">
+        <div>
+          <div style="font-size: 16px; font-weight: 700; letter-spacing: -0.2px;">Conexión a SQL Server</div>
+          <div style="font-size: 12px; color: #9aa1ad; margin-top: 2px;">Guarda los entornos y elige la base de datos por defecto.</div>
+        </div>
+        <div style="flex: 1;"></div>
+        <div onClick="{{ closeModal }}" style="width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #9aa1ad;" style-hover="background: #f2f5f9; color: #4b5563;">
+          <svg width="15" height="15" viewBox="0 0 15 15"><path d="M3 3l9 9M12 3l-9 9" stroke="currentColor" stroke-width="1.5"></path></svg>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 210px 1fr; min-height: 0; flex: 1;">
+        <!-- saved envs -->
+        <div style="border-right: 1px solid #eef0f3; padding: 16px 12px; background: #fafbfc; overflow: auto;">
+          <div style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; color: #9aa1ad; padding: 4px 8px 8px;">ENTORNOS</div>
+          <sc-for list="{{ environments }}" as="env" hint-placeholder-count="3">
+            <div onClick="{{ env.select }}" style="display: flex; align-items: center; gap: 9px; padding: 10px; border-radius: 9px; cursor: pointer; margin-bottom: 4px; background: {{ env.bg }}; border: 1px solid {{ env.border }};">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: {{ env.dot }}; flex: 0 0 8px;"></span>
+              <div style="min-width: 0;">
+                <div style="font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ env.name }}</div>
+                <div style="font-size: 10.5px; color: #9aa1ad; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ env.server }}</div>
+              </div>
+            </div>
+          </sc-for>
+          <div style="display: flex; align-items: center; gap: 7px; padding: 10px; border-radius: 9px; cursor: pointer; color: #2563eb; font-size: 12.5px; font-weight: 600; margin-top: 2px;" style-hover="background: #eaf1ff;">
+            <svg width="13" height="13" viewBox="0 0 13 13"><path d="M6.5 2v9M2 6.5h9" stroke="#2563eb" stroke-width="1.5"></path></svg>
+            Nuevo entorno
+          </div>
+        </div>
+
+        <!-- form -->
+        <div style="padding: 22px 26px; overflow: auto;">
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 7px;">Nombre del entorno</label>
+            <input value="Producción" style="width: 100%; height: 40px; padding: 0 13px; border: 1px solid #e3e6ea; border-radius: 9px; font-size: 13.5px; font-family: inherit; outline: none; color: #263042;" style-focus="border-color: #2563eb; box-shadow: 0 0 0 3px #dbe6ff;">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 150px; gap: 12px; margin-bottom: 16px;">
+            <div>
+              <label style="display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 7px;">Servidor</label>
+              <input value="SqlServer01\\INST01" style="width: 100%; height: 40px; padding: 0 13px; border: 1px solid #e3e6ea; border-radius: 9px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; outline: none; color: #263042;" style-focus="border-color: #2563eb; box-shadow: 0 0 0 3px #dbe6ff;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 7px;">Puerto</label>
+              <input value="1433" style="width: 100%; height: 40px; padding: 0 13px; border: 1px solid #e3e6ea; border-radius: 9px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; outline: none; color: #263042;" style-focus="border-color: #2563eb; box-shadow: 0 0 0 3px #dbe6ff;">
+            </div>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 7px;">Autenticación</label>
+            <div style="display: flex; gap: 8px;">
+              <div style="flex: 1; height: 40px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #2563eb; background: #eaf1ff; border-radius: 9px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: #2563eb;">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #2563eb;"></span> SQL Server
+              </div>
+              <div style="flex: 1; height: 40px; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #e3e6ea; background: #fbfcfd; border-radius: 9px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: #6b7280;" style-hover="border-color: #c9cfd8;">
+                <span style="width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid #c2c8d2;"></span> Windows
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+            <div>
+              <label style="display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 7px;">Usuario</label>
+              <input value="sa" style="width: 100%; height: 40px; padding: 0 13px; border: 1px solid #e3e6ea; border-radius: 9px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; outline: none; color: #263042;" style-focus="border-color: #2563eb; box-shadow: 0 0 0 3px #dbe6ff;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 7px;">Contraseña</label>
+              <input type="password" value="passwordvalue" style="width: 100%; height: 40px; padding: 0 13px; border: 1px solid #e3e6ea; border-radius: 9px; font-size: 13.5px; font-family: 'JetBrains Mono', monospace; outline: none; color: #263042;" style-focus="border-color: #2563eb; box-shadow: 0 0 0 3px #dbe6ff;">
+            </div>
+          </div>
+
+          <div style="margin-bottom: 18px;">
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 7px;">Base de datos por defecto</label>
+            <div style="position: relative;">
+              <input value="Ventas" style="width: 100%; height: 40px; padding: 0 13px; border: 1px solid #e3e6ea; border-radius: 9px; font-size: 13.5px; font-family: inherit; outline: none; color: #263042;" style-focus="border-color: #2563eb; box-shadow: 0 0 0 3px #dbe6ff;">
+              <span style="position: absolute; right: 12px; top: 15px; font-size: 10.5px; color: #9aa1ad; font-weight: 500;">se usa al probar la conexión</span>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px;">
+            <span style="width: 8px; height: 8px; border-radius: 50%; background: #16a34a; flex: 0 0 8px;"></span>
+            <span style="font-size: 12.5px; color: #15803d; font-weight: 600;">Conexión correcta</span>
+            <span style="font-size: 11.5px; color: #4d7c5a;">· SQL Server 2019 · 42 ms</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px; padding: 16px 24px; border-top: 1px solid #eef0f3; background: #fafbfc;">
+        <div onClick="{{ noop }}" style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border: 1px solid #e3e6ea; border-radius: 9px; cursor: pointer; background: #ffffff; font-size: 13px; font-weight: 600; color: #4b5563;" style-hover="border-color: #c9cfd8;">
+          <svg width="13" height="13" viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11" fill="#4b5563"></polygon></svg>
+          Probar conexión
+        </div>
+        <div style="flex: 1;"></div>
+        <div onClick="{{ closeModal }}" style="height: 40px; padding: 0 18px; display: flex; align-items: center; border-radius: 9px; cursor: pointer; font-size: 13px; font-weight: 600; color: #6b7280;" style-hover="background: #eef0f3;">Cancelar</div>
+        <div onClick="{{ closeModal }}" style="height: 40px; padding: 0 20px; display: flex; align-items: center; border-radius: 9px; cursor: pointer; background: #2563eb; color: #ffffff; font-size: 13px; font-weight: 600;" style-hover="background: #1d4fd7;">Guardar entorno</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: &quot;100%&quot;, &quot;height&quot;: &quot;100%&quot;}, &quot;wordWrap&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Resultado&quot;}, &quot;denseMode&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Resultado&quot;}, &quot;showEnvBadge&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Barra superior&quot;}}">
+class Component extends DCLogic {
+  state = { modalOpen: false, dbOpen: false, currentDb: "Ventas", activeEnv: 0 };
+
+  renderVals() {
+    const dbs = ["Ventas", "RRHH", "Inventario", "Contabilidad"];
+    const envs = [
+      { name: "Producción", server: "", dot: "#16a34a" },
+      { name: "QA", server: "", dot: "#f59e0b" },
+      { name: "Desarrollo", server: "", dot: "#94a3b8" }
+    ];
+    const wrap = this.props.wordWrap ?? false;
+    const dense = this.props.denseMode ?? false;
+    const showEnv = this.props.showEnvBadge ?? true;
+
+    return {
+      modalDisplay: this.state.modalOpen ? "flex" : "none",
+      dbMenuDisplay: this.state.dbOpen ? "block" : "none",
+      currentDb: this.state.currentDb,
+      envDisplay: showEnv ? "flex" : "none",
+      envName: envs[this.state.activeEnv].name,
+      envServer: envs[this.state.activeEnv].server,
+      codeWS: wrap ? "pre-wrap" : "pre",
+      codeLH: dense ? "1.5" : "1.75",
+      openModal: () => this.setState({ modalOpen: true, dbOpen: false }),
+      closeModal: () => this.setState({ modalOpen: false }),
+      toggleDb: () => this.setState(s => ({ dbOpen: !s.dbOpen })),
+      noop: () => {},
+      stop: (e) => { e.stopPropagation(); },
+      databases: dbs.map(name => ({
+        name,
+        checkDisplay: name === this.state.currentDb ? "inline" : "none",
+        select: () => this.setState({ currentDb: name, dbOpen: false })
+      })),
+      environments: envs.map((e, i) => ({
+        name: e.name,
+        server: e.server,
+        dot: e.dot,
+        bg: i === this.state.activeEnv ? "#eaf1ff" : "transparent",
+        border: i === this.state.activeEnv ? "#c7dbff" : "transparent",
+        select: () => this.setState({ activeEnv: i })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>
