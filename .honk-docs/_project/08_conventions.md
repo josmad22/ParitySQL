@@ -51,10 +51,10 @@ Init: helptext helper
 
 ## Releases
 
-**Versioning:** SemVer (versión actual `0.1.0` en `Cargo.toml` y `tauri.conf.json`).
+**Versioning:** SemVer sincronizado en `Cargo.toml`, `Cargo.lock` y `tauri.conf.json`; incremento automático de parche desde `main`.
 
 ```text
-Commit a main -> etiqueta vX.Y.Z -> pruebas y firma en Actions -> GitHub Release pública
+Push a main -> incremento de parche y etiqueta automáticos -> pruebas y firma -> GitHub Release pública
 ```
 
 ## Code Review

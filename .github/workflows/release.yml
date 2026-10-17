@@ -2,6 +2,8 @@ name: Publicar versión de ParitySQL
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v[0-9]*'
   workflow_dispatch:
@@ -10,29 +12,65 @@ permissions:
   contents: write
 
 concurrency:
-  group: paritysql-release-${{ github.ref }}
+  group: paritysql-release
   cancel-in-progress: false
 
 jobs:
+  version:
+    name: Preparar versión
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.available.outputs.publish }}
+      tag: ${{ steps.version.outputs.tag }}
+      sha: ${{ steps.version.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar preparación de versiones
+        run: node --test tests/release-version.test.js
+      - name: Preparar commit y etiqueta de versión
+        id: version
+        run: node scripts/prepare-version.js
+      - name: Evitar reemplazar una versión publicada
+        id: available
+        if: steps.version.outputs.publish == 'true'
+        uses: actions/github-script@v7
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        with:
+          script: |
+            try {
+              const { data: release } = await github.rest.repos.getReleaseByTag({ ...context.repo, tag: process.env.RELEASE_TAG });
+              core.setOutput('publish', String(release.draft));
+              if (!release.draft) core.info('La versión ya está publicada; no se reemplazarán sus archivos.');
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              core.setOutput('publish', 'true');
+            }
   windows:
+    needs: version
+    if: needs.version.outputs.publish == 'true'
     runs-on: windows-latest
     env:
       PARITYSQL_UPDATER_PUBLIC_KEY: ${{ vars.PARITYSQL_UPDATER_PUBLIC_KEY }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.sha }}
       - name: Validar configuración de publicación
         shell: pwsh
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           RELEASE_REPOSITORY: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
-          RELEASE_REF_TYPE: ${{ github.ref_type }}
+          RELEASE_TAG: ${{ needs.version.outputs.tag }}
         run: |
           if ([string]::IsNullOrWhiteSpace($env:TAURI_SIGNING_PRIVATE_KEY)) {
             throw "Configura el secreto TAURI_SIGNING_PRIVATE_KEY antes de publicar."
-          }
-          if ($env:RELEASE_REF_TYPE -ne "tag") {
-            throw "Ejecuta este workflow sobre una etiqueta de versión, por ejemplo v0.1.0."
           }
           ./scripts/prepare-release.ps1 -Repository $env:RELEASE_REPOSITORY -PublicKey $env:PARITYSQL_UPDATER_PUBLIC_KEY -Tag $env:RELEASE_TAG
       - uses: dtolnay/rust-toolchain@stable
@@ -57,8 +95,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: ParitySQL ${{ github.ref_name }}
+          tagName: ${{ needs.version.outputs.tag }}
+          releaseName: ParitySQL ${{ needs.version.outputs.tag }}
           releaseDraft: true
           prerelease: false
           releaseBody: |

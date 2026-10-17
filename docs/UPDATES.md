@@ -22,20 +22,28 @@ https://github.com/josmad22/ParitySQL/releases/latest/download/latest.json
 
 Las compilaciones de desarrollo pueden comprobar y descargar versiones, pero no instalar una actualización sobre el proceso de desarrollo.
 
-## Publicar una nueva versión
+## Publicación automática desde main
 
-1. Cambia la versión en `src-tauri/Cargo.toml` y `src-tauri/tauri.conf.json`. Actualiza también el paquete `paritysql` de `Cargo.lock` mediante Cargo.
-2. Ejecuta las pruebas y sube el commit a `main`.
-3. Crea y sube una etiqueta que coincida con esa versión:
+Solo necesitas subir tus cambios a `main`:
 
 ```powershell
-git tag v0.1.1
-git push origin v0.1.1
+git push origin main
 ```
 
-El workflow `release.yml` valida la versión y la clave pública, ejecuta las pruebas, compila el instalador y firma el paquete. Primero prepara una release en borrador; al comprobar que existen el instalador, su firma y `latest.json`, la publica automáticamente. Finalmente descarga el paquete público, verifica la firma, rechaza un paquete alterado y comprueba que la misma versión no se ofrece como actualización.
+GitHub Actions aumenta automáticamente el parche (`0.1.0` → `0.1.1`), sincroniza `Cargo.toml`, `Cargo.lock` y `tauri.conf.json`, y guarda un commit del bot junto con su etiqueta. La compilación utiliza ese commit exacto.
 
-También puedes reejecutar el workflow desde Actions seleccionando una **etiqueta** existente. Si falla antes de publicar, el borrador no se anuncia a los usuarios. No modifiques una etiqueta ya distribuida; publica una versión superior.
+Después ejecuta las pruebas, compila y firma el instalador. Prepara una release en borrador y la publica al comprobar que existen el instalador, su firma y `latest.json`. Finalmente descarga el paquete público, verifica su firma y confirma que la misma versión no se ofrece como actualización.
+
+El mismo workflow prepara y publica: las subidas hechas con `GITHUB_TOKEN` no lanzan otro workflow, por lo que no se generan bucles ni dos compilaciones para la etiqueta automática. No se necesita agregar un token personal.
+
+- Un reintento reutiliza la versión preparada. Una release ya publicada conserva sus archivos.
+- Las publicaciones se ejecutan de una en una. Si llegan varias subidas mientras otra está en curso, se prioriza el estado más reciente de `main`.
+- Si falla antes de publicar, el borrador no se anuncia a los usuarios. Puedes reejecutar la ejecución fallida en Actions.
+- El bot añade un commit a `main`. Antes de empezar los próximos cambios, trae esa versión a tu copia local con `git pull --ff-only`.
+
+Para un salto mayor, puedes actualizar manualmente los tres archivos a una versión superior, por ejemplo `0.2.0`, antes de subir el commit; Actions respetará esa versión. También se conserva la publicación mediante etiquetas manuales `vX.Y.Z` o desde **Run workflow**, seleccionando `main` o una etiqueta existente. No modifiques una etiqueta distribuida.
+
+Las reglas de protección de `main` deben permitir que Actions guarde el commit de versión. Si la rama rechaza esa escritura, el workflow falla sin forzar la subida.
 
 ## Firma y claves
 

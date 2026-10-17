@@ -30,7 +30,10 @@
 ## CI/CD
 
 **Pipeline:** `.github/workflows/release.yml` prepara releases Windows NSIS en
-borrador al crear una etiqueta de versión y las publica al completar los artefactos.
+borrador desde cada push a `main` y las publica al completar los artefactos.
+`scripts/prepare-version.js` incrementa el parche y sube de forma atómica el commit
+con la etiqueta, usando `GITHUB_TOKEN`. También admite etiquetas manuales; las
+publicaciones se serializan y los reintentos no sustituyen versiones distribuidas.
 La variable pública `PARITYSQL_UPDATER_PUBLIC_KEY` y los secretos de firma de Tauri
 están configurados en `josmad22/ParitySQL`. El canal usa GitHub Releases por HTTPS.
 Después de publicar se comprueban descarga, firma y comparación de versiones.

@@ -68,5 +68,5 @@ Las conexiones, incluidas sus contraseñas, se guardan **en texto plano en la co
 
 ## Más información
 
-- [Actualizaciones automáticas y publicación de versiones](docs/UPDATES.md). La aplicación avisa cuando hay una versión superior; permite descargarla y elegir **Reiniciar ahora**.
+- [Actualizaciones automáticas y publicación de versiones](docs/UPDATES.md). Cada subida a `main` prepara una versión, la compila y la publica firmada. La aplicación permite descargarla y elegir **Reiniciar ahora**.
 - [Arquitectura del proyecto](.honk-docs/_project/03_architecture.md).

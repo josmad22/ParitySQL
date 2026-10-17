@@ -84,9 +84,10 @@ extracción como la consulta de definiciones acumulan errores por objeto.
   el instalador termina el proceso al instalar: por eso la descarga y el reinicio
   solicitado por el usuario son operaciones separadas.
 - El reinicio espera guardados y no interrumpe operaciones o el modal de conexiones.
-- La distribución usa releases NSIS firmadas. Al subir una etiqueta de versión,
-  el workflow prepara un borrador con instalador, firma y `latest.json`, comprueba
-  sus artefactos y lo publica automáticamente. Después verifica el canal real.
+- Cada subida a `main` prepara el siguiente parche y un commit/etiqueta del bot.
+  El mismo workflow compila ese SHA y publica una release NSIS firmada con
+  instalador, firma y `latest.json`. Los reintentos reutilizan la versión y no
+  reemplazan releases ya publicadas. Después se verifica el canal real.
 - La clave privada solo existe como secreto del proceso de firma; no se compila ni
   se guarda en el repositorio. Véase `docs/UPDATES.md`.
 
