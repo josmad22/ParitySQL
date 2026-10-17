@@ -51,7 +51,7 @@ Init: helptext helper
 
 ## Releases
 
-**Versioning:** SemVer sincronizado en `Cargo.toml`, `Cargo.lock` y `tauri.conf.json`; incremento automático de parche desde `main`.
+**Versioning:** SemVer sincronizado en `Cargo.toml`, `Cargo.lock` y `tauri.conf.json`; incremento automático solo de `Z` desde `main`. El responsable elige `X.Y` manualmente; cada nueva serie comienza en `X.Y.1` (por ejemplo, `0.2.1`). Configurar los tres archivos en `X.Y.0` prepara esa primera publicación en `X.Y.1`. No se retrocede de serie ni se reemplazan etiquetas distribuidas.
 
 ```text
 Push a main -> incremento de parche y etiqueta automáticos -> pruebas y firma -> GitHub Release pública

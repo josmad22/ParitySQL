@@ -41,7 +41,20 @@ El mismo workflow prepara y publica: las subidas hechas con `GITHUB_TOKEN` no la
 - Si falla antes de publicar, el borrador no se anuncia a los usuarios. Puedes reejecutar la ejecución fallida en Actions.
 - El bot añade un commit a `main`. Antes de empezar los próximos cambios, trae esa versión a tu copia local con `git pull --ff-only`.
 
-Para un salto mayor, puedes actualizar manualmente los tres archivos a una versión superior, por ejemplo `0.2.0`, antes de subir el commit; Actions respetará esa versión. También se conserva la publicación mediante etiquetas manuales `vX.Y.Z` o desde **Run workflow**, seleccionando `main` o una etiqueta existente. No modifiques una etiqueta distribuida.
+### Regla de versiones
+
+Se usa `X.Y.Z`. **Actions solo incrementa `Z` (parche)** dentro de la serie `X.Y` elegida por el responsable:
+
+| Caso | Resultado |
+|---|---|
+| Siguiente subida en `0.1.x` después de `0.1.2` | `0.1.3` |
+| Cambio manual a la serie `0.2.x` | Primera publicación `0.2.1` |
+| Siguiente subida en `0.2.x` | `0.2.2` |
+| Cambio manual a la serie `1.0.x` | Primera publicación `1.0.1` |
+
+Para elegir una nueva serie, actualiza **los tres archivos** (`src-tauri/Cargo.toml`, el paquete `paritysql` de `src-tauri/Cargo.lock` y `src-tauri/tauri.conf.json`) a `0.2.0` o directamente a `0.2.1` y sube el cambio a `main`. En ambos casos se publicará `0.2.1`; los siguientes pushes aumentarán solo el parche. Una nueva serie con parche superior a `1` se rechaza, igual que volver a una serie anterior. La versión histórica `0.1.0` se conserva.
+
+También se conserva la publicación mediante etiquetas manuales `vX.Y.Z` o desde **Run workflow**, seleccionando `main` o una etiqueta existente. Las etiquetas manuales deben respetar la misma regla y coincidir con los tres archivos. No modifiques una etiqueta distribuida.
 
 Las reglas de protección de `main` deben permitir que Actions guarde el commit de versión. Si la rama rechaza esa escritura, el workflow falla sin forzar la subida.
 

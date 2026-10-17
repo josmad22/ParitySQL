@@ -36,15 +36,26 @@ function project(t) {
   return { root, remote, git, read, commit, change };
 }
 
-test("incrementa el parche desde la última etiqueta estable y respeta versiones mayores manuales", () => {
+test("incrementa solo el parche de la serie seleccionada manualmente", () => {
   assert.equal(nextVersion("0.1.0", ["v0.1.0"]), "0.1.1");
   assert.equal(nextVersion("0.1.0", ["v0.1.9", "v0.1.10", "v1.0.0-rc.1", "other"]), "0.1.11");
-  assert.equal(nextVersion("0.2.0", ["v0.1.1"]), "0.2.0");
-  assert.equal(nextVersion("1.0.0", []), "1.0.0");
-  assert.equal(nextVersion("0.1.0", ["v2.0.3"]), "2.0.4");
+  assert.equal(nextVersion("0.1.1", ["v0.1.1"]), "0.1.2");
+  assert.equal(nextVersion("0.1.20", ["v0.1.10"]), "0.1.20");
+  assert.throws(() => nextVersion("0.1.0", ["v2.0.3"]), /serie seleccionada es anterior/);
+  assert.throws(() => nextVersion("1.9.0", ["v2.0.1"]), /serie seleccionada es anterior/);
+  assert.throws(() => nextVersion("0.1.0", ["v0.1.9007199254740991"]), /rango admitido/);
   for (const invalid of ["0.01.0", "1.0.0-beta", "v1.0.0", "1.0", undefined, ["1.0.0"], "1.0.9007199254740992"]) {
     assert.throws(() => parseVersion(invalid));
   }
+});
+
+test("cada nueva serie comienza en uno y nunca hereda el parche de la anterior", () => {
+  assert.equal(nextVersion("0.2.0", ["v0.1.25"]), "0.2.1");
+  assert.equal(nextVersion("0.2.1", ["v0.1.25"]), "0.2.1");
+  assert.equal(nextVersion("0.2.1", ["v0.1.25", "v0.2.1"]), "0.2.2");
+  assert.equal(nextVersion("1.0.0", ["v0.9.99"]), "1.0.1");
+  assert.equal(nextVersion("1.0.0", []), "1.0.1");
+  assert.throws(() => nextVersion("0.2.5", ["v0.1.25"]), /nueva serie debe comenzar en 1/);
 });
 
 test("sincroniza solo el paquete raíz y conserva dependencias, clave pública y nombre", t => {
@@ -85,13 +96,32 @@ test("un push crea una sola versión y un reintento recupera el mismo commit y e
   assert.equal(p.git("tag", "--list").split("\n").length, 2);
 });
 
-test("una versión mayor manual se etiqueta sin un commit vacío ni un incremento adicional", t => {
+test("un cambio manual de serie desde cero publica uno y continúa con dos", t => {
   const p = project(t);
   updateVersions(p.root, "0.2.0");
   const source = p.commit("new minor");
   p.git("push", "origin", "main");
   const release = prepareVersion(p.root, { ref: "refs/heads/main", sha: source });
-  assert.deepEqual(release, { publish: true, tag: "v0.2.0", sha: source });
+  assert.equal(release.tag, "v0.2.1");
+  assert.equal(readVersions(p.read), "0.2.1");
+  assert.equal(p.git("tag", "--list", "v0.2.0"), "");
+  assert.equal(p.git("show", "-s", "--format=%P", release.sha), source);
+  p.git("checkout", "--detach", source);
+  assert.deepEqual(prepareVersion(p.root, { ref: "refs/heads/main", sha: source }), release);
+  p.git("checkout", "main");
+  const nextSource = p.change("next-feature.txt");
+  const next = prepareVersion(p.root, { ref: "refs/heads/main", sha: nextSource });
+  assert.equal(next.tag, "v0.2.2");
+  assert.equal(readVersions(p.read), "0.2.2");
+});
+
+test("una nueva serie elegida directamente en uno no añade un commit vacío", t => {
+  const p = project(t);
+  updateVersions(p.root, "0.2.1");
+  const source = p.commit("new minor at one");
+  p.git("push", "origin", "main");
+  const release = prepareVersion(p.root, { ref: "refs/heads/main", sha: source });
+  assert.deepEqual(release, { publish: true, tag: "v0.2.1", sha: source });
   assert.deepEqual(prepareVersion(p.root, { ref: "refs/heads/main", sha: source }), release);
 });
 

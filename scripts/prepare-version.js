@@ -23,12 +23,22 @@ function compareVersions(left, right) {
 }
 
 function nextVersion(current, tags) {
-  parseVersion(current);
+  const parts = parseVersion(current);
   const stable = tags.filter(tag => /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(tag)).map(tag => tag.slice(1));
   const latest = stable.reduce((max, version) => !max || compareVersions(version, max) > 0 ? version : max, null);
-  if (!latest || compareVersions(current, latest) > 0) return current;
-  const parts = parseVersion(latest);
-  parts[2]++;
+  const series = parts.slice(0, 2).join(".");
+  const latestParts = latest && parseVersion(latest);
+  if (latestParts && (parts[0] < latestParts[0] || (parts[0] === latestParts[0] && parts[1] < latestParts[1]))) {
+    throw new Error("La serie seleccionada es anterior a la última versión; elige una serie igual o superior manualmente.");
+  }
+  // Solo el responsable elige X.Y; Actions incrementa Z dentro de esa serie.
+  const sameSeries = latestParts && latestParts.slice(0, 2).join(".") === series;
+  if (!sameSeries) {
+    if (parts[2] > 1) throw new Error("Una nueva serie debe comenzar en 1; configura " + series + ".0 o " + series + ".1.");
+    parts[2] = 1;
+  } else {
+    parts[2] = Math.max(parts[2], latestParts[2] + 1);
+  }
   const next = parts.join(".");
   parseVersion(next);
   return next;
